@@ -54,6 +54,8 @@ func NewError(err error) (err2 *Error) {
 			// less output, details see err2.err
 			err2.msg = errs[0].Error()
 		}
+	default:
+		err2.msg = err.Error()
 	}
 	return
 }

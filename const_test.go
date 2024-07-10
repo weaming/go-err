@@ -7,6 +7,9 @@ import (
 )
 
 func TestError(t *testing.T) {
+	keyErr := NewError(errors.New("key error"))
+	log.Printf("FromError: err %s, fmt %s", keyErr.Error(), keyErr.String())
+
 	log.Printf("InternalError: err %s, fmt %s", InternalError.Error(), InternalError.String())
 	log.Printf("IOError: err %s, fmt %s", IOError.Error(), IOError.String())
 	log.Printf("DBError: err %s, fmt %s", DBError.Error(), DBError.String())
