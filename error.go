@@ -11,7 +11,9 @@ import (
 var _ ErrorInterface = &Error{}
 
 type ErrorInterface interface {
-	error // compatible
+	// compatible,
+	// and for output without change existing code
+	error
 
 	// keep more context values
 	Set(key string, value any) *Error
@@ -26,16 +28,16 @@ type ErrorInterface interface {
 	// create a new variant
 	Extend(format string, a ...any) *Error
 	// update the message
-	SetString(format string, a ...any) *Error
+	SetMsg(format string, a ...any) *Error
 
-	// output to outside
-	String() string
+	// for log
+	Debug() string
 }
 
 type Error struct {
 	context.Context
 	err    error
-	msg    string
+	errMsg string
 	values sync.Map
 }
 
@@ -46,22 +48,22 @@ func NewError(err error) (err2 *Error) {
 	case interface{ Unwrap() error }:
 		err = x.Unwrap()
 		if err != nil {
-			err2.msg = err.Error()
+			err2.errMsg = err.Error()
 		}
 	case interface{ Unwrap() []error }:
 		errs := x.Unwrap()
 		if len(errs) > 0 {
 			// less output, details see err2.err
-			err2.msg = errs[0].Error()
+			err2.errMsg = errs[0].Error()
 		}
 	default:
-		err2.msg = err.Error()
+		err2.errMsg = err.Error()
 	}
 	return
 }
 
 func NewErrorFromString(msg string) *Error {
-	return &Error{msg: msg, err: errors.New(msg)}
+	return &Error{errMsg: msg, err: errors.New(msg)}
 }
 
 func (e *Error) Set(key string, value any) *Error {
@@ -83,23 +85,23 @@ func (e *Error) GetAll() map[string]any {
 	return m
 }
 
-func (e *Error) String() string {
-	if e.msg != "" {
-		return e.msg
+func (e *Error) Error() string {
+	if e.errMsg != "" {
+		return e.errMsg
 	}
 	return e.Error()
 }
 
-func (e *Error) Error() string {
+func (e *Error) Debug() string {
 	if e.err != nil {
 		return e.err.Error()
 	}
-	return e.msg
+	return e.errMsg
 }
 
 func (e *Error) Is(target error) bool {
 	if e2, ok := target.(*Error); ok {
-		if strings.HasPrefix(e.msg, e2.msg) {
+		if strings.HasPrefix(e.errMsg, e2.errMsg) {
 			return true
 		}
 	}
@@ -137,12 +139,12 @@ func (e *Error) Extend(format string, a ...any) *Error {
 			err = errors.Join(errs...)
 		}
 	} else {
-		err = errors.New(e.msg + suffix)
+		err = errors.New(e.errMsg + suffix)
 	}
 	return NewError(err)
 }
 
-func (e *Error) SetString(format string, a ...any) *Error {
-	e.msg = fmt.Sprintf(format, a...)
+func (e *Error) SetMsg(format string, a ...any) *Error {
+	e.errMsg = fmt.Sprintf(format, a...)
 	return e
 }
