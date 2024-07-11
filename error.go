@@ -1,7 +1,6 @@
 package goerr
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -35,7 +34,6 @@ type ErrorInterface interface {
 }
 
 type Error struct {
-	context.Context
 	err    error
 	errMsg string
 	values sync.Map
